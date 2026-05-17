@@ -1,0 +1,132 @@
+===========================================================================
+                        SOLIDITY VOTING CONTRACT PRACTICES
+===========================================================================
+
+=== 1. Proposal Storage ===
+
+[Goal]
+Define a Proposal struct to store a target address, calldata, and vote counts. Implement a function to create new proposals and store them in a public array.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Voting {
+    struct Proposal {
+        address target;
+        bytes data;
+        uint yesCount;
+        uint noCount;
+    }
+
+    Proposal[] public proposals;
+
+    function newProposal(address _target, bytes calldata _data) external {
+        proposals.push(Proposal(_target, _data, 0, 0));
+    }
+}
+
+
+=== 2. Cast a Vote ===
+
+[Goal]
+Implement a castVote function that increments the yesCount or noCount of a specific proposal index.
+
+[Code]
+function castVote(uint _proposalId, bool _supports) external {
+    Proposal storage proposal = proposals[_proposalId];
+
+    if (_supports) {
+        proposal.yesCount++;
+    } else {
+        proposal.noCount++;
+    }
+}
+
+
+=== 3. Multiple Votes (Vote Swapping) ===
+
+[Goal]
+Use a nested mapping and an enum to track voter states (None, Yes, No). Allow users to change their vote, adjusting the counts accordingly.
+
+[Code]
+enum VoteStates { None, Yes, No }
+mapping(uint => mapping(address => VoteStates)) public voteStates;
+
+function castVote(uint _proposalId, bool _supports) external {
+    Proposal storage proposal = proposals[_proposalId];
+    VoteStates prevState = voteStates[_proposalId][msg.sender];
+
+    if (prevState == VoteStates.Yes) proposal.yesCount--;
+    if (prevState == VoteStates.No) proposal.noCount--;
+
+    if (_supports) {
+        proposal.yesCount++;
+        voteStates[_proposalId][msg.sender] = VoteStates.Yes;
+    } else {
+        proposal.noCount++;
+        voteStates[_proposalId][msg.sender] = VoteStates.No;
+    }
+}
+
+
+=== 4. Events ===
+
+[Goal]
+Emit ProposalCreated and VoteCast events to allow off-chain applications to track contract activity.
+
+[Code]
+event ProposalCreated(uint proposalId);
+event VoteCast(uint proposalId, address voter);
+
+function newProposal(address _target, bytes calldata _data) external {
+    proposals.push(Proposal(_target, _data, 0, 0));
+    emit ProposalCreated(proposals.length - 1);
+}
+
+// Inside castVote
+emit VoteCast(_proposalId, msg.sender);
+
+
+=== 5. Members (Sybil Resistance) ===
+
+[Goal]
+Add a constructor that initializes a whitelist of allowed voters. Create a modifier to restrict proposal creation and voting to these members only.
+
+[Code]
+mapping(address => bool) public members;
+
+constructor(address[] memory _members) {
+    members[msg.sender] = true;
+    for(uint i = 0; i < _members.length; i++) {
+        members[_members[i]] = true;
+    }
+}
+
+modifier onlyMember() {
+    require(members[msg.sender], "Not an authorized member");
+    _;
+}
+
+
+=== 6. Execute (Threshold & Call) ===
+
+[Goal]
+Set a 10-vote threshold for execution. Use a low-level call to trigger the proposal's data on its target address, ensuring the proposal is only executed once.
+
+[Code]
+// Update Struct
+struct Proposal {
+    address target;
+    bytes data;
+    uint yesCount;
+    uint noCount;
+    bool executed;
+}
+
+// Inside castVote logic
+if (proposal.yesCount >= 10 && !proposal.executed) {
+    proposal.executed = true;
+    (bool success, ) = proposal.target.call(proposal.data);
+    require(success, "Execution failed");
+}
