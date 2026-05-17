@@ -1,0 +1,90 @@
+=== 1. Interfaces (Alert Hero) ===
+
+[Goal]
+Use the IHero interface to alert the hero from the Sidekick contract.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+interface IHero {
+    function alert() external;
+}
+
+contract Sidekick {
+    function sendAlert(address hero) external {
+        IHero(hero).alert();
+    }
+}
+
+
+=== 2. Function Signature (Manual Alert) ===
+
+[Goal]
+Alert the Hero manually by hashing the function signature "alert()".
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Sidekick {
+    function sendAlert(address hero) external {
+        bytes4 signature = bytes4(keccak256("alert()"));
+        (bool success, ) = hero.call(abi.encodePacked(signature));
+        require(success);
+    }
+}
+
+
+=== 3. Encode With Signature (Alert with Arguments) ===
+
+[Goal]
+Alert the Hero with uint256 enemies and bool armed using abi.encodeWithSignature.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Sidekick {
+    function sendAlert(address hero, uint enemies, bool armed) external {
+        (bool success, ) = hero.call(
+            abi.encodeWithSignature("alert(uint256,bool)", enemies, armed)
+        );
+        require(success);
+    }
+}
+
+
+=== 4. Arbitrary Alert (Pass Calldata) ===
+
+[Goal]
+Update the relay function to take arbitrary bytes data and send it to the Hero.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Sidekick {
+    function relay(address hero, bytes memory data) external {
+        (bool success, ) = hero.call(data);
+        require(success);
+    }
+}
+
+=== 5. Fallback (Trigger the Fallback) ===
+
+[Goal]
+In the makeContact method, send some calldata to the Hero contract that will trigger its fallback function.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Sidekick {
+    function makeContact(address hero) external {
+        // Sending any data that doesn't match a function signature
+        // will trigger the target contract's fallback function.
+        (bool success, ) = hero.call(abi.encodePacked(uint256(12345)));
+        require(success);
+    }
+}

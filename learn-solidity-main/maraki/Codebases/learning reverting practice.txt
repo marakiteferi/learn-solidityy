@@ -1,0 +1,88 @@
+=== 1. Reverting Transactions (Require 1 Ether) ===
+
+[Goal]
+Add a payable constructor method that requires a 1 ether deposit. 
+If at least 1 ether is not sent to the constructor, revert the transaction.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    constructor() payable {
+        // Use require to ensure at least 1 ether is sent
+        require(msg.value >= 1 ether, "At least 1 ether is required!");
+    }
+}
+
+
+=== 2. Restricting by Address (Owner Withdrawal) ===
+
+[Goal]
+Create a public function withdraw that will withdraw all funds from the contract and send them to the deployer.
+Require that only the deployer of the contract be allowed to call this function.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    address public owner;
+
+    constructor() payable {
+        require(msg.value >= 1 ether, "Must send at least 1 ether");
+        owner = msg.sender;
+    }
+
+    function withdraw() public {
+        // Ensure only the owner can call this
+        require(msg.sender == owner, "Only owner can withdraw");
+
+        // Send total contract balance to the owner
+        uint256 balance = address(this).balance;
+        (bool success, ) = owner.call{ value: balance }("");
+        require(success, "Transfer failed.");
+    }
+}
+
+
+=== 3. Function Modifiers (Owner Modifier) ===
+
+[Goal]
+Update the onlyOwner modifier to require that only the owner address can call functions without reverting. 
+Use the _ to indicate where the function body should go.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    uint configA;
+    uint configB;
+    uint configC;
+    address owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    function setA(uint _configA) public onlyOwner {
+        configA = _configA;
+    }
+
+    function setB(uint _configB) public onlyOwner {
+        configB = _configB;
+    }
+
+    function setC(uint _configC) public onlyOwner {
+        configC = _configC;
+    }
+
+    modifier onlyOwner {
+        // Check if caller is owner
+        require(msg.sender == owner, "Caller is not owner");
+        
+        // Execute the rest of the function body
+        _;
+    }
+}

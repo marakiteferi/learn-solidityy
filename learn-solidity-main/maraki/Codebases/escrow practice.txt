@@ -1,0 +1,150 @@
+=== 1. State Variables (Addresses) ===
+
+[Goal]
+Create three public storage variables for the addresses of the depositor, beneficiary, and arbiter[cite: 1].
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+contract Escrow {
+    address public depositor;
+    address public beneficiary;
+    address public arbiter;
+}
+
+
+=== 2. Constructor (Store Addresses) ===
+
+[Goal]
+Create a constructor that stores the arbiter and beneficiary addresses from arguments and sets the depositor as the contract deployer[cite: 1].
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+contract Escrow {
+    address public depositor;
+    address public beneficiary;
+    address public arbiter;
+
+    constructor(address _arbiter, address _beneficiary) {
+        depositor = msg.sender;
+        arbiter = _arbiter;
+        beneficiary = _beneficiary;
+    }
+}
+
+
+=== 3. Funding (Payable) ===
+
+[Goal]
+Modify the constructor to be payable so the depositor can send the escrow funds during deployment[cite: 1].
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+contract Escrow {
+    address public depositor;
+    address public beneficiary;
+    address public arbiter;
+
+    constructor(address _arbiter, address _beneficiary) payable {
+        depositor = msg.sender;
+        arbiter = _arbiter;
+        beneficiary = _beneficiary;
+    }
+}
+
+
+=== 4. Approval (Move Funds) ===
+
+[Goal]
+Create an external function called approve that moves the contract's balance to the beneficiary[cite: 1].
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+contract Escrow {
+    address public depositor;
+    address public beneficiary;
+    address public arbiter;
+
+    constructor(address _arbiter, address _beneficiary) payable {
+        depositor = msg.sender;
+        arbiter = _arbiter;
+        beneficiary = _beneficiary;
+    }
+
+    function approve() external {
+        uint balance = address(this).balance;
+        (bool success, ) = beneficiary.call{value: balance}("");
+        require(success, "Transfer failed.");
+    }
+}
+
+
+=== 5. Security (Arbiter Only) ===
+
+[Goal]
+Ensure that only the arbiter address can successfully call the approve function[cite: 1].
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+contract Escrow {
+    address public depositor;
+    address public beneficiary;
+    address public arbiter;
+
+    constructor(address _arbiter, address _beneficiary) payable {
+        depositor = msg.sender;
+        arbiter = _arbiter;
+        beneficiary = _beneficiary;
+    }
+
+    function approve() external {
+        require(msg.sender == arbiter, "Only the arbiter can approve the transfer");
+
+        uint balance = address(this).balance;
+        (bool success, ) = beneficiary.call{value: balance}("");
+        require(success, "Transfer failed.");
+    }
+}
+
+
+=== 6. Events (Emit Approval) ===
+
+[Goal]
+Create and emit an Approved event with the balance sent to the beneficiary[cite: 1].
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.20;
+
+contract Escrow {
+    address public depositor;
+    address public beneficiary;
+    address public arbiter;
+
+    event Approved(uint balance);
+
+    constructor(address _arbiter, address _beneficiary) payable {
+        depositor = msg.sender;
+        arbiter = _arbiter;
+        beneficiary = _beneficiary;
+    }
+
+    function approve() external {
+        require(msg.sender == arbiter, "Only the arbiter can approve the transfer");
+
+        uint balance = address(this).balance;
+        (bool success, ) = beneficiary.call{value: balance}("");
+        require(success, "Transfer failed.");
+
+        emit Approved(balance);
+    }
+}

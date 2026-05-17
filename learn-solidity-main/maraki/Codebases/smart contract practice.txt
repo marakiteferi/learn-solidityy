@@ -1,0 +1,108 @@
+=== 1. Add Two Boolean Variables ===
+
+[Goal]
+Create two public boolean storage variables on the contract: a and b.
+Store true in the variable a and false in the value b.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    // Variable 'a' is stored permanently and is set to true
+    bool public a = true;
+
+    // Variable 'b' is stored permanently and is set to false
+    bool public b = false;
+}
+
+
+=== 2. Create Unsigned Integers! ===
+
+[Goal]
+Let's create three public storage unsigned integers in our Contract: a, b, and sum.
+Define the variable a as an uint8 with an initial value between 0 and 255.
+Define the variable b as an uint16 with a value of at least 256.
+The variable sum should be a uint256 with the sum of the values stored in a and b.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    // a can hold 0 to 255. Let's pick 100.
+    uint8 public a = 100;
+
+    // b must be at least 256. Let's pick 1000.
+    uint16 public b = 1000;
+
+    // sum adds a and b together (100 + 1000 = 1100)
+    uint256 public sum = a + b;
+}
+
+
+=== 3. Create Signed Integers! ===
+
+[Goal]
+Create three public storage integers a, b, and difference.
+Declare the variables a and b as int8. One of the values must be positive, the other must be negative.
+Declare the variable difference as a int16 which is the absolute difference between a and b.
+(You can get the absolute difference simply by subtracting the negative number from the positive number. For instance, for the values 10 and -15, the absolute difference would be 25 which is 10 - -15.)
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    // Declaring a positive int8
+    int8 public a = 10;
+
+    // Declaring a negative int8
+    int8 public b = -15;
+
+    // Calculating the absolute difference (10 - -15 = 25)
+    // We store it in an int16 to ensure there's plenty of room
+    int16 public difference = a - b;
+}
+
+
+=== 4. Hello World ===
+
+[Goal]
+Create a public bytes32 storage variable msg1 which stores a string literal "Hello World".
+Create a public string storage variable msg2 which stores a string literal that requires over 32 bytes to store.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    // msg1 is a fixed-size byte array. Efficient for short strings!
+    bytes32 public msg1 = "Hello World";
+
+    // msg2 is a dynamic string. We need over 32 characters to exceed 32 bytes.
+    // (Assuming standard 1-byte characters like ASCII)
+    string public msg2 = "This string is definitely longer than thirty-two bytes to satisfy the requirement!";
+}
+
+
+=== 5. Make Some Food! ===
+
+[Goal]
+In the enum provided you'll see there are four types of Foods.
+Take the values and store them in food1, food2, food3, and food4.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    // Our custom data type containing four options
+    enum Foods { Apple, Pizza, Bagel, Banana }
+
+    // We assign the enum values using the 'EnumName.Option' syntax
+    Foods public food1 = Foods.Apple;  // Internally 0
+    Foods public food2 = Foods.Pizza;  // Internally 1
+    Foods public food3 = Foods.Bagel;  // Internally 2
+    Foods public food4 = Foods.Banana; // Internally 3
+}
