@@ -1,0 +1,139 @@
+=== 1. Solidity Addresses (Store the Owner) ===
+
+[Goal]
+Create a public address state variable called owner on the contract.
+Next create a constructor function which will store the msg.sender in owner.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    // The address of the account that deployed the contract
+    address public owner;
+
+    constructor() {
+        // msg.sender is the address that initiated the deployment
+        owner = msg.sender;
+    }
+}
+
+
+=== 2. Receive Function (Receive Ether) ===
+
+[Goal]
+Add a function to the contract that will allow it to receive ether on a transaction without any calldata.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    // This special function allows the contract to receive Ether
+    receive() external payable {
+        // The Ether is automatically added to the contract's balance
+    }
+}
+
+
+=== 3. Transferring Funds (Tip Owner) ===
+
+[Goal]
+Create a way to tip the contract owner!
+Create a public payable function tip which sends any of its received ether to the owner.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    receive() external payable {}
+
+    // Function to accept tips and forward them to the owner
+    function tip() public payable {
+        (bool success, ) = owner.call{ value: msg.value }("");
+        require(success, "Transfer failed.");
+    }
+}
+
+
+=== 4. Contract Account (Charity Donation) ===
+
+[Goal]
+Modify the constructor to accept a new argument: the charity address.
+Next, add a new function called donate. When this function is called transfer all remaining funds in the contract to the charity address.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    address public owner;
+    address public charity;
+
+    // Modified constructor to accept the charity address
+    constructor(address _charity) {
+        owner = msg.sender;
+        charity = _charity;
+    }
+
+    receive() external payable {}
+
+    function tip() public payable {
+        (bool success, ) = owner.call{ value: msg.value }("");
+        require(success, "Transfer failed.");
+    }
+
+    // Donate function to send the entire contract balance to charity
+    function donate() external {
+        uint256 balance = address(this).balance;
+        (bool success, ) = charity.call{ value: balance }("");
+        require(success, "Donation failed.");
+    }
+}
+
+
+=== 5. Self Destruct ===
+
+[Goal]
+When the donate function is called, trigger a selfdestruct in the contract!
+The selfdestruct will send all remaining funds to the address passed in. Cast the address to an address payable.
+
+[Code]
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract Contract {
+    address public owner;
+    address public charity;
+
+    constructor(address _charity) {
+        owner = msg.sender;
+        charity = _charity;
+    }
+
+    receive() external payable {}
+
+    function tip() public payable {
+        (bool success, ) = owner.call{ value: msg.value }("");
+        require(success, "Transfer failed.");
+    }
+
+    function donate() external {
+        // selfdestruct takes a 'payable' address. 
+        // It sends the contract's entire balance to the charity and destroys the contract.
+        selfdestruct(payable(charity));
+    }
+}
